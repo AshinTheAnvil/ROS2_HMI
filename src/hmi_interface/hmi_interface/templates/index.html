@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotic Cell HMI</title>
+    <style>
+        .green { background-color: green; width: 50px; height: 50px; border-radius: 50%; }
+        .yellow { background-color: yellow; width: 50px; height: 50px; border-radius: 50%; }
+        .red { background-color: red; width: 50px; height: 50px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <h1>Robotic Cell Human-Machine Interface (HMI)</h1>
+
+    <h2>Request Info</h2>
+    <p>Pick ID: {{ pick_info['pickId'] }}</p>
+    <p>Quantity: {{ pick_info['quantity'] }}</p>
+
+    <h2>Response Info</h2>
+    <p>Pick ID: {{ response_info['pickId'] }}</p>
+    <p>Pick Successful: {{ response_info['pickSuccessful'] }}</p>
+    <p>Item Barcode: {{ response_info['itemBarcode'] }}</p>
+
+    <h2>Emergency Button State</h2>
+    <p>{{ 'Pressed' if emergency_state else 'Not Pressed' }}</p>
+
+    <h2>Door Handle State</h2>
+    <p>{{ 'Closed' if door_state else 'Open' }}</p>
+
+    <h2>Stack Light State</h2>
+    <div>
+        {% if stack_light_state == 0 %}
+            <div class="green"></div>
+        {% elif stack_light_state == 1 %}
+            <div class="yellow"></div>
+        {% elif stack_light_state == -1 %}
+            <div class="red"></div>
+        {% endif %}
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    <script>
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('update', function(data) {
+        if ("door_state" in data) {
+            document.getElementById("door_state").innerText = data.door_state ? "CLOSED" : "OPEN";
+        }
+        if ("emergency_state" in data) {
+            document.getElementById("emergency_state").innerText = data.emergency_state ? "PRESSED" : "RELEASED";
+        }
+        if ("stack_light_state" in data) {
+            let color = "black";
+            if (data.stack_light_state == 0) color = "green";
+            else if (data.stack_light_state == 1) color = "yellow";
+            else if (data.stack_light_state == -1) color = "red";
+
+            document.getElementById("stack_light").style.backgroundColor = color;
+        }
+    });
+   </script>
+
+   <h1>HMI Interface</h1>
+   <p>Door State: <span id="door_state">LOADING...</span></p>
+   <p>Emergency State: <span id="emergency_state">LOADING...</span></p>
+   <div id="stack_light" style="width: 50px; height: 50px; background-color: black;"></div>
+
+</body>
+</html>
+
